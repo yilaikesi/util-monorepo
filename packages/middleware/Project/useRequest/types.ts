@@ -36,6 +36,13 @@ export interface PluginReturn<TData, TParams extends any[]> {
 	onMutate?: (data: TData) => void;
 }
 
+export interface CachedData<TData = any, TParams = any> {
+	data: TData;
+	params: TParams;
+	time: number;
+  }
+
+
 // for useRequestImplement
 export interface UseRequestOptions<TData, TParams extends any[]> {
 	onBefore?: (params: TParams) => void;
@@ -80,7 +87,9 @@ export interface UseRequestOptions<TData, TParams extends any[]> {
 	cacheKey?: string;
 	cacheTime?: number;
 	staleTime?: number;
-
+	setCache?: (data: CachedData<TData, TParams>) => void;
+	getCache?: (params: TParams) => CachedData<TData, TParams> | undefined;
+  
 	// retry
 	retryCount?: number;
 	retryInterval?: number;

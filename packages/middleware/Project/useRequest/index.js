@@ -40,6 +40,8 @@ const useRequest = (service, options = {}, plugins = []) => {
     options.subscribe ?? DefaultSubFn, Object.assign({}, ...initState));
     fetchInstance.options = fetchOptions;
     // run all plugins hooks | casely
+    // 重要:实例化参数
+    // 插件如果需要使用 那么 map((e)=>{e[event](参数就可以了)})
     fetchInstance.pluginImpls = resPlugins.map((p) => {
         return p(fetchInstance, fetchOptions);
     });

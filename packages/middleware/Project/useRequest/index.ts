@@ -18,19 +18,33 @@ let initState = {
 	loading: true,
 };
 /**
- * run 逻辑 | runAsync 逻辑
- 1.option 判断一下 returnNow(立刻return promise.resolve(state.data)) 和 stopNow(立刻return promise)
- 2.马上 setState 
- 3.onBefore 传入一个 param(runPluginHandler 暴露出onbefore事件)
- 4.try 里面写一个 await servicePromise 针对promise 进行管理.(runPluginHandler 暴露出onRequest)
-    4.1.try完成后 setState +  runPluginHandler onSuccess 方法和 onFinally 方法
-    4.2.catch setState runPluginHandler onError 方法和 onFinally 方法
+ *fetch run 逻辑 | runAsync 逻辑
+ 注意onbefore 和 onfinish是一类东西，先传入param，data，error
+ 然后onsuccess 和 onerror是一类东西，先传入error | data 然后传入 res
+ 1.传递给插件的 onBefore 生命周期 主要用来初始化参数，参数判断见下
+ 2.returnNow(立刻返回缓存的数据) 和 stopNow(立刻返回空数据)
+ 3.马上 setState 
+ 4.传递给用户 的 onbefore 生命周期
+ 5.try 里面写一个 await servicePromise 针对promise 进行管理.(runPluginHandler 暴露出onRequest)
+    5.1.try完成后 setState +  runPluginHandler onSuccess 方法和 onFinally 方法
+    5.2.catch setState runPluginHandler onError 方法和 onFinally 方法
    
+onmutate 是用来 传入错误的onerror，然后修改返回的数据的
+
+
+
 
 总结一下,假如直接run那么会调用三次,
 初始化的时候 | run  |最后结束的时候也要手动调用一次 setState
 
-设计思想是用 run 作为一个代理，run里面写入生命周期等增强方法
+设计思想是用 fetch包装成一个类，然后plugin是有一个二次包装的思想和生命周期的思想
+第一次包装传入 fetchInstance的实例化对象和其他的参数,返回一个生命周期的object
+第二次 包装传入 eventName 和 其他的事件参数
+run 作为一个代理，run里面写入生命周期等增强方法
+
+
+生命周期
+
 
  */
 import type {
@@ -73,6 +87,8 @@ const useRequest = <TData, TParams extends any[]>(
 	);
 	fetchInstance.options = fetchOptions;
 	// run all plugins hooks | casely
+	// 重要:实例化参数
+	// 插件如果需要使用 那么 map((e)=>{e[event](参数就可以了)})
 	fetchInstance.pluginImpls = resPlugins.map((p) => {
 		return p(fetchInstance, fetchOptions);
 	});

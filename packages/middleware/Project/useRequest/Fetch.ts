@@ -40,6 +40,7 @@ export default class Fetch<TData, TParams extends any[]> {
 	runPluginHandler(event: keyof PluginReturn<TData, TParams>, ...rest: any[]) {
 		const r = this.pluginImpls
 			.map((i) => {
+				console.log("event:", event, rest);
 				// @ts-ignore
 				return i[event]?.(...rest);
 			})

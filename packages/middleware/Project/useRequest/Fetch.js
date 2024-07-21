@@ -30,6 +30,7 @@ export default class Fetch {
     runPluginHandler(event, ...rest) {
         const r = this.pluginImpls
             .map((i) => {
+            console.log("event:", event, rest);
             // @ts-ignore
             return i[event]?.(...rest);
         })
