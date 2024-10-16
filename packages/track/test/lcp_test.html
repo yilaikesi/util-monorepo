@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div class="test9999">11111111111111111111111111111111</div>
+    <div class="test9999">2222222222222222222222222222222</div>
+    <div class="test9999">333333333333333333333333333333</div>
+    <div class="test9999">4444444444444444444444444444444</div>
+    <div class="test9999">5555555555555555555555555555555</div>
+    <div class="test9999">6666666666666666666666666666666</div>
+    <div class="test9999">7777777777777777777777777777777</div>
+    <div class="test9999">8888888888888888888888888888888</div>
+    <div class="test9999">9999999999999999999999999999999</div>
+    <div class="test9999">0000000000000000000000000000000</div>
+    <div class="test9999">11111111111111111111111111111111</div>
+    <div class="test9999">2222222222222222222222222222222</div>
+    <div class="test9999">333333333333333333333333333333</div>
+    <div class="test9999">4444444444444444444444444444444</div>
+    <script type="module">
+        import { Tracking } from "../core/index.js";
+        import { performancePlugin } from "../plugins/util/performancePlugin.js"
+
+        let t = new Tracking({
+            plugins: {
+                performancePlugin,
+            },
+            config: {
+                autoRun: true
+            },
+            reportConfig: {
+                type: "debug",
+            },
+        });
+        console.log("t", t, t.pluginGet("errorPlugin"))
+
+
+
+
+    </script>
+
+
+</body>
+
+</html>

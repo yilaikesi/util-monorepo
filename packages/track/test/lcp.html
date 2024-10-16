@@ -9,9 +9,23 @@
 </head>
 
 <body>
-    <img src="https://cdn.apifox.com/app/project-icon/builtin/7.jpg" alt="">
+    <!-- <img src="https://cdn.apifox.com/app/project-icon/builtin/7.jpg" alt="">
     <img src="https://tse2-mm.cn.bing.net/th/id/OIP-C.AV53EMWCZoYJR5tkVRc9vgHaEK?w=281&h=180&c=7&r=0&o=5&pid=1.7"
-        alt="">
+        alt=""> -->
+    <div class="test9999">111111111111111111111111111111111111111111111111baaaa</div>
+    <div class="test9999">2222222222222222222222222222222</div>
+    <div class="test9999">333333333333333333333333333333</div>
+    <div class="test9999">4444444444444444444444444444444</div>
+    <div class="test9999">5555555555555555555555555555555</div>
+    <div class="test9999">6666666666666666666666666666666</div>
+    <div class="test9999">7777777777777777777777777777777</div>
+    <div class="test9999">8888888888888888888888888888888</div>
+    <div class="test9999">9999999999999999999999999999999</div>
+    <div class="test9999">0000000000000000000000000000000</div>
+    <div class="test9999">11111111111111111111111111111111</div>
+    <div class="test9999">2222222222222222222222222222222</div>
+    <div class="test9999">333333333333333333333333333333</div>
+    <div class="test9999">4444444444444444444444444444444</div>
     <!-- <img src="https://static.vecteezy.com/ti/vetor-gratis/p3/641253-fundo-do-espaco-com-planetts-se-movendo-ao-redor-do-sol-em-orbitas-gratis-vetor.jpg"
         alt=""> -->
     <script>
@@ -57,12 +71,14 @@
                 // due to rounding precision.
                 lcpEntry ? lcpEntry.startTime : 0
             );
-            console.log("lcpResponseEnd渲染总时间:",
-                {
-                    lcpRenderTime, lcpEntry, lcpResEntry,
-                    "lcpResEntry.responseEnd": lcpResEntry.responseEnd,
-                    "lcpEntry.startTime": lcpEntry.startTime
-                })
+            // console.log("lcpResponseEnd渲染总时间:",
+            //     {
+            //         lcpRenderTime, lcpEntry, lcpResEntry,
+            //         "lcpResEntry.responseEnd": lcpResEntry.responseEnd,
+            //         "lcpEntry.startTime": lcpEntry.startTime
+            //     })
+
+
             // Clear previous measures before making new ones.
             // Note: due to a bug, this doesn't work in Chrome DevTools.
             LCP_SUB_PARTS.forEach((part) => performance.clearMeasures(part));
@@ -89,13 +105,14 @@
                     end: lcpRenderTime,
                 }),
             ];
-
             // Log helpful debug information to the console.
             console.log('LCP value: ', lcpRenderTime);
             console.log('LCP element: ', lcpEntry.element, lcpEntry.url);
+
+
             console.table(
                 lcpSubPartMeasures.map((measure) => {
-                    console.log("me", measure);
+
                     return {
                         'LCP sub-part': measure.name,
                         'Time (ms)': measure.duration,

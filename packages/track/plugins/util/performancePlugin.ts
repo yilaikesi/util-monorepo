@@ -13,6 +13,7 @@ interface returnItemType extends returnItemBaseType {
 	duration?: any;
 	size?: any;
 	type: "lcp";
+	tag?: any;
 	// 性能指标名字 fp 之类的
 	name?: any;
 	// 性能指标元素 "xxx.jpg" 元素
@@ -21,6 +22,7 @@ interface returnItemType extends returnItemBaseType {
 	// 性能指标url "xxx.jpg" 元素
 	resourceUrl?: any;
 	children?: returnItemType[];
+	radio? : any;
 }
 
 /**
@@ -29,52 +31,57 @@ interface returnItemType extends returnItemBaseType {
  * @param object.trackConfig object object 插件的配置
  */
 export class performancePlugin {
-	trackConfigData;
-	constructor(obj = { trackSend: () => {}, trackConfig: {} }) {
-		console.log("实际的object:", obj);
-
-		this.trackConfigData = obj;
-
-		// window.addEventListener("popstate", function (event) {
-		// 	console.log("popstate 已经发生变化:", event);
-		// });
-		// window.addEventListener("hashchange", function (event) {
-		// 	console.log("hashchange 已经发生变化:", event);
-		// 	obj.trackSend({ url: "/api/get", data: window.location.search });
-		// });
-
-		// window.addEventListener("unload", function (event) {
-		// 	console.log("hashchange 已经发生变化:", event);
-		// 	// window.location.search 包括了#号和之后的?，假如是? 之后，我们会拿到第一个?
-		// 	// window.location.hash 包括了#号和之后的，假如是#xxx#n 之后，我们会拿到第一个之后
-		// 	// new URLSearchParams(window.location.search) 返回值可以get 什么的
-		// 	this.trackConfigData.trackSend({
-		// 		url: "/api/get",
-		// 		data: JSON.stringify(window.location.search),
-		// 	});
-		// });
+	staticConfig
+	trackConfigData: { trackSend: () => void; trackConfig: any };
+	constructor({trackSend, trackConfig} = { trackSend: () => {}, trackConfig: {} }) {
+		this.trackConfigData = {
+			trackSend, trackConfig
+		};
+		// this.autoRun();
 	}
-	autoRun() {}
+	autoRun() {
+		this.lcp()
+	}
 	lcp(): returnItemType[] {
 		let arr: returnItemType[] = [];
 		let list = new PerformanceObserver((list: any) => {
 			// console.log(list);
 			// LargestContentfulPaint 格式的,只有startTime 渲染开始的时间有作用
-			let entry = list.getEntries().at(-1);
-			if (entry) {
+			let lcpEntry = list.getEntries().at(-1);
+
+
+			if (lcpEntry) {
 				arr.push({
-					element: entry?.element?.tagName,
-					resourceUrl: entry?.url,
+					element: lcpEntry?.element,
+					tag: lcpEntry?.element?.tagName,
+					resourceUrl: lcpEntry?.url,
 					url: window.location.href,
-					startTime: entry?.startTime,
+					startTime: lcpEntry?.startTime,
 					type: "lcp",
-					extraInfo: {},
+					// extraInfo: {}
+					
 				});
 				const lcpResourceEntry = performance
 					.getEntriesByType("resource")
-					.filter((e) => e.name === entry.url)[0] as any;
+					.filter((e) => e.name === lcpEntry.url)[0] as any;
+
+				// fp 首次绘制时间
 				// @ts-ignore
 				let fp = performance.getEntriesByType("navigation")[0].responseStart;
+
+				// lcp 加载 资源延迟 结束的时间
+				let lcp_load_delay_endTime = Math.max(fp, lcpResourceEntry?.requestStart ?? 0)
+				
+				// lcp 加载 资源 结束的时候
+				let lcp_load_responseEnd = lcpResourceEntry?.responseEnd ?? 0
+
+				let LcpEndTime =  Math.max(
+					lcp_load_responseEnd, 
+					lcpEntry ? lcpEntry.startTime ?? 0 : 0
+				)
+				
+
+				// lcp 加载时间
 				arr[0]["children"] = [
 					{
 						name: "fp",
@@ -83,50 +90,52 @@ export class performancePlugin {
 						duration: fp,
 						type: "lcp",
 						url: window.location.href,
-						extraInfo: {},
+						// extraInfo: {},
+						radio: fp/LcpEndTime,
 					},
 					// 加载延迟
 					{
 						name: "lcp_load_delay",
-						startTime: fp,
-						endTime: Math.max(fp, lcpResourceEntry?.requestStart),
-						duration: Math.max(fp, lcpResourceEntry?.requestStart) - fp,
+						startTime: fp ?? 0,
+						endTime: lcp_load_delay_endTime,
+						duration: lcp_load_delay_endTime - fp,
 						type: "lcp",
 						url: window.location.href,
-						extraInfo: {},
+						// extraInfo: {},
+						radio: (lcp_load_delay_endTime - fp)/LcpEndTime,
 					},
 					// 加载时间
 					{
 						name: "lcp_load_time",
-						startTime: Math.max(fp, lcpResourceEntry?.requestStart),
-						endTime: lcpResourceEntry?.responseEnd,
+						startTime: lcp_load_delay_endTime,
+						endTime: lcp_load_responseEnd,
 						duration:
-							lcpResourceEntry?.responseEnd -
-							Math.max(fp, lcpResourceEntry?.requestStart),
+							lcp_load_responseEnd-
+							lcp_load_delay_endTime,
 						type: "lcp",
 						url: window.location.href,
-						extraInfo: {},
+						// extraInfo: {},
+						radio: (lcp_load_responseEnd - lcp_load_delay_endTime)/LcpEndTime,
 					},
-					// 加载时间
+					// 渲染时间
 					{
 						name: "lcp_rendering",
-						startTime: lcpResourceEntry?.responseEnd,
-						endTime: Math.max(lcpResourceEntry?.responseEnd, entry.startTime),
-						duration: null,
+						startTime: lcp_load_responseEnd,
+						endTime: LcpEndTime,
+						duration: LcpEndTime - (lcp_load_responseEnd),
 						type: "lcp",
 						url: window.location.href,
-						extraInfo: {},
+						// extraInfo: {},
+						radio: (LcpEndTime - (lcp_load_responseEnd))/LcpEndTime,
 					},
 				];
+				
+				console.table(arr[0]["children"]);
 			}
-			console.log("拼装", arr);
+			// this.trackConfigData.trackSend(arr);
 		});
 		list.observe({ type: "largest-contentful-paint", buffered: true });
 		return arr;
-	}
-	// 全部
-	te() {
-		console.log("te");
 	}
 }
 

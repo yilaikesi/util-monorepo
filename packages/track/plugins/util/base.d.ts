@@ -6,7 +6,7 @@ declare type returnItemBaseType = {
 	// 类型下的名称
 	name?: string;
 
-	extraInfo: any;
+	extraInfo?: any;
 	children?: returnItemBaseType[];
 
 	user?: {

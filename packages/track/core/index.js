@@ -1,4 +1,3 @@
-import { getUser } from "./util.js";
 function QsString(ob) {
     let res = "?";
     for (let i in ob) {
@@ -7,11 +6,6 @@ function QsString(ob) {
     res = res.substring(0, res.length - 1);
     return res;
 }
-// let obj = {
-// 	user: "id1111",
-// 	env: "测试",
-// };
-// console.log(QsString(obj));
 function QsObj(split, ob) {
     let text = ob.split(split).at(-1)?.split("&");
     let res = {};
@@ -37,6 +31,9 @@ export class Tracking {
      * @des 自动运行
      */
     autoRun() {
+        if (!this.TrackingConfig?.config?.autoRun) {
+            return;
+        }
         if (this.TrackingConfig.plugins) {
             for (let i in this.TrackingConfig.plugins) {
                 this.enhanceFn[i] = new this.TrackingConfig.plugins[i]({
@@ -52,16 +49,22 @@ export class Tracking {
         return this.enhanceFn[plugin];
     }
     trackSend() {
-        let baseUrl = this.TrackingConfig.reportConfig.baseUrl;
-        let method = this.TrackingConfig.reportConfig.type;
+        let baseUrl = this.TrackingConfig?.reportConfig?.baseUrl;
+        let method = this.TrackingConfig?.reportConfig?.type;
+        if (method == "debug")
+            return (jsonDebug) => {
+                console.log('%c ' + JSON.stringify(jsonDebug, null, 2), 'color: blue; font-family: monospace;  border-radius: 5px;');
+            };
+        if (!baseUrl || !method)
+            return null;
         return async ({ data, url = "" }) => {
-            let user = await getUser({ getIp: false });
-            console.log("调用监控:", { data, user });
+            // let user = await getUser({ getIp: false });
+            // console.log("调用监控:", { data, user });
             if (method == "beacon") {
                 let handleData;
                 if (Object.prototype.toString.call(data) == "[object Object]" ||
                     Object.prototype.toString.call(data) == "[object Array]") {
-                    handleData = JSON.stringify({ user, data: data });
+                    handleData = JSON.stringify({ user: null, data: data });
                     for (let i = 0; i < 10000; i++) {
                         handleData = handleData + "8996589";
                     }
@@ -75,7 +78,7 @@ export class Tracking {
                 let handleData;
                 if (Object.prototype.toString.call(data) == "[object Object]" ||
                     Object.prototype.toString.call(data) == "[object Array]") {
-                    handleData = "?data=" + JSON.stringify(data) + "&user=" + user;
+                    handleData = "?data=" + JSON.stringify(data); // + "&user=" + user;
                     img.src = baseUrl + url + handleData;
                 }
             }
