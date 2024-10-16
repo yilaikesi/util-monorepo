@@ -45,7 +45,7 @@ export class performancePlugin {
 	lcp(): returnItemType[] {
 		let arr: returnItemType[] = [];
 		let list = new PerformanceObserver((list: any) => {
-			// console.log(list);
+			console.log(list);
 			// LargestContentfulPaint 格式的,只有startTime 渲染开始的时间有作用
 			let lcpEntry = list.getEntries().at(-1);
 
@@ -61,6 +61,8 @@ export class performancePlugin {
 					// extraInfo: {}
 					
 				});
+
+				// performance.getEntriesByType("resource")
 				const lcpResourceEntry = performance
 					.getEntriesByType("resource")
 					.filter((e) => e.name === lcpEntry.url)[0] as any;
@@ -129,7 +131,7 @@ export class performancePlugin {
 						radio: (LcpEndTime - (lcp_load_responseEnd))/LcpEndTime,
 					},
 				];
-				
+				console.log(arr);
 				console.table(arr[0]["children"]);
 			}
 			// this.trackConfigData.trackSend(arr);

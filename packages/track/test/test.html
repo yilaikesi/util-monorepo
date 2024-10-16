@@ -3,88 +3,97 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-
 </head>
 
 <body>
-    <script type="module">
 
-        let arr = [];
 
-        document.addEventListener("abort", () => {
-            console.log("document:abort")
-        })
-        window.addEventListener("error", (e) => {
-            console.log("-error-:", e);
-            if (e instanceof ErrorEvent) {
-                // ErrorEvent
-                console.log("ErrorEvent:", e);
-                arr.push({
-                    lineno: e.lineno,
-                    message: e.message,
-                    type: "ErrorEvent",
-                    url: window.location.href,
-                });
-            }
-            else if (e instanceof Event) {
-                // Event 需要特殊处理，这里是加载资源报错
-                console.log("Event:", e);
-                // 当前dom节点
-                let target = e.target;
-                let tagName = target.tagName;
-                target.src;
-                if (tagName.toUpperCase() === "IMG" || tagName.toUpperCase() === "VIDEO" || tagName.toUpperCase() === "SCRIPT") {
-                    // 可以通过 target.dataset 设置重试次数
-                    arr.push({
-                        name: e.target?.src,
-                        element: tagName,
-                        type: "ErrorResource",
-                        url: window.location.href,
-                    });
-                    // target.src = "./error.svg";
-                }
-            }
-        }, true);
-        document.addEventListener("visibilitychange", (e) => {
+    <!-- parse time: 300ms -->
+    <img src="https://yesux.github.io/logo.svg" alt="">
+    <!-- performance.getEntriesByType("resource") -->
+    <!-- parse time: 1000ms -->
+    <img src="https://images.hdqwalls.com/download/space-art-planet-4k-59-3840x2160.jpg" alt="">
+    <script>
+        const LCP_SUB_PARTS = [
+            'Time to first byte',
+            'Resource load delay',
+            'Resource load time',
+            'Element render delay',
+        ]
 
-            console.log("change:", JSON.parse(JSON.stringify({ e, arr })));
-            arr = []
-        });
+        new PerformanceObserver((list) => {
+            const lcpEntry = list.getEntries().at(-1)
+            const navEntry = performance.getEntriesByType('navigation')[0]
+            console.log('lcpEntry', lcpEntry)
+            const lcpResEntry = performance
+                .getEntriesByType('resource')
+                .filter((e) => e.name === lcpEntry.url)[0]
 
-        function a() {
-            new Promise((resoluve, reject) => {
-                reject(1)
-            })
-        }
-        // a()
-        window.addEventListener("unhandledrejection", (e) => {
-            // console.log("unhandledrejection:", e)
-            // let target = e.target, // 当前dom节点
-            //     tagName = target.tagName,
-            //     count = Number(target.dataset.count) || 0, // 以失败的次数，默认为0
-            //     max = 3; // 总失败次数，此时设定为3
-            // // 当前异常是由图片加载异常引起的
-            // if (tagName.toUpperCase() === 'IMG') {
-            //     if (count >= max) {
-            //         target.src = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD//AK3/ALYH+5hX6FV5N4Y/5GHwx/vyf+iJa9ZrysPhoYVShDZu/potDmwWFhhIzhT2bv6aLQ//Z';
-            //     } else {
-            //         target.dataset.count = count + 1;
-            //         target.src = '//xxx/default.jpg';
-            //     }
-            // }
-        });
+            // Ignore LCP entries that aren't images to reduce DevTools noise.
+            // Comment this line out if you want to include text entries.
+            if (!lcpEntry.url) return
+
+            // Compute the start and end times of each LCP sub-part.
+            // WARNING! If your LCP resource is loaded cross-origin, make sure to add
+            // the `Timing-Allow-Origin` (TAO) header to get the most accurate results.
+            const ttfb = navEntry.responseStart
+            const lcpRequestStart = Math.max(
+                ttfb,
+                // Prefer `requestStart` (if TOA is set), otherwise use `startTime`.
+                lcpResEntry ? lcpResEntry.requestStart || lcpResEntry.startTime : 0
+            )
+            const lcpResponseEnd = Math.max(
+                lcpRequestStart,
+                lcpResEntry ? lcpResEntry.responseEnd : 0
+            )
+            const lcpRenderTime = Math.max(
+                lcpResponseEnd,
+                // Use LCP startTime (the final LCP time) because there are sometimes
+                // slight differences between loadTime/renderTime and startTime
+                // due to rounding precision.
+                lcpEntry ? lcpEntry.startTime : 0
+            )
+
+            // Clear previous measures before making new ones.
+            // Note: due to a bug, this doesn't work in Chrome DevTools.
+            LCP_SUB_PARTS.forEach((part) => performance.clearMeasures(part))
+
+            // Create measures for each LCP sub-part for easier
+            // visualization in the Chrome DevTools Performance panel.
+            const lcpSubPartMeasures = [
+                performance.measure(LCP_SUB_PARTS[0], {
+                    start: 0,
+                    end: ttfb,
+                }),
+                performance.measure(LCP_SUB_PARTS[1], {
+                    start: ttfb,
+                    end: lcpRequestStart,
+                }),
+                performance.measure(LCP_SUB_PARTS[2], {
+                    start: lcpRequestStart,
+                    end: lcpResponseEnd,
+                }),
+                performance.measure(LCP_SUB_PARTS[3], {
+                    start: lcpResponseEnd,
+                    end: lcpRenderTime,
+                }),
+            ]
+
+            // Log helpful debug information to the console.
+            console.log('LCP value: ', lcpRenderTime)
+            console.log('LCP element: ', lcpEntry.element, lcpEntry.url)
+            console.table(
+                lcpSubPartMeasures.map((measure) => ({
+                    'LCP sub-part': measure.name,
+                    'Time (ms)': measure.duration,
+                    '% of LCP': `${Math.round((1000 * measure.duration) / lcpRenderTime) / 10
+                        }%`,
+                }))
+            )
+        }).observe({ type: 'largest-contentful-paint', buffered: true })
     </script>
-    <img src="./error2323.svg" alt="">
-    <video src="./dsasad"></video>
-
-    <!-- <img src="https://smart-construction-app.oss-cn-beijing.aliyuncs.com/licenseImageUrl/%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_20240403145208.png"
-        alt=""> -->
-    <!-- <script src="index.js"></script> -->
-    <script crossorigin="" src="xx.js" type="text/javascript"></script>
-
 </body>
 
 </html>
